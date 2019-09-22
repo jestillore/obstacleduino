@@ -18,6 +18,8 @@
 Servo sonarServo;
 int fromBackward = 0;
 
+char command = 0;
+
 void setup() {
   Serial.begin(9600);
   
@@ -31,15 +33,59 @@ void setup() {
   pinMode(in3, OUTPUT);
   pinMode(in4, OUTPUT);
 
-  analogWrite(ena, 200);
-  analogWrite(enb, 200);
-
   sonarServo.attach(10);
   lookFront();
   delay(2000);
 }
 
 void loop() {
+  bluetoothMode();
+}
+
+void testingMode() {
+  moveForward();
+  delay(1000);
+  stopCar();
+  delay(1000);
+  turnRight();
+  delay(1000);
+  stopCar();
+  delay(1000);
+  turnLeft();
+  delay(1000);
+  stopCar();
+  delay(1000);
+  moveBackward();
+  delay(1000);
+  stopCar();
+  delay(1000);
+}
+
+void bluetoothMode() {
+  if (Serial.available() > 0) {
+    command = Serial.read();
+    switch (command) {
+      case '1':
+        moveForward();
+        break;
+      case '2':
+        turnRight();
+        break;
+      case '3':
+        moveBackward();
+        break;
+      case '4':
+        turnLeft();
+        break;
+      case '5':
+        stopCar();
+        break;
+    }
+  }
+  delay(20);
+}
+
+void obstacleMode() {
   int distance, leftDistance, rightDistance;
   distance = getDistance();
 
@@ -94,23 +140,36 @@ void lookFront() {
   sonarServo.write(frontAngle);
 }
 
-void moveForward() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
+void fullSpeed() {
+  analogWrite(ena, 120);
+  analogWrite(enb, 120);
 }
 
-void turnRight() {
-  digitalWrite(in1, LOW);
+void halfSpeed() {
+  analogWrite(ena, 75);
+  analogWrite(enb, 75);
+}
+
+void moveForward() {
+  fullSpeed();
+  digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
 }
 
 void turnLeft() {
+  halfSpeed();
   digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
+void turnRight() {
+  halfSpeed();
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
   digitalWrite(in3, LOW);
   digitalWrite(in4, LOW);
 }
@@ -123,10 +182,11 @@ void stopCar() {
 }
 
 void moveBackward() {
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, HIGH);
+  fullSpeed();
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
 }
 
 int getDistance() {
